@@ -11,8 +11,9 @@ cmd="$cmd --cluster-config $cluster_yaml"
 cmd="$cmd --cluster \"${CLUSTER_CMD}\""
 cmd="$cmd --cluster-cancel bkill"
 cmd="$cmd --use-singularity"
+cmd="$cmd -p"
 cmd="$cmd --singularity-args \"--bind /juno --bind /rtsess01\""
-cmd="$cmd --dry-run"
+# cmd="$cmd --dry-run"
 
 echo $cmd
 eval $cmd

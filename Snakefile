@@ -11,8 +11,8 @@ rule all:
 rule extract_reads:
     input:
         bam = os.path.join(base_dir, 'data/{sample}.bam'),
-        intervals = ''
+        intervals = os.path.join(base_dir, 'metadata/regions.intervals'),
     output:
         bam = os.path.join(base_dir, 'data/alignment/extracted/{sample}.svs.bam'),
     shell:
-        'PrintReads.sh {input.bam} {input.intervals} {output.bam}'
+        'scripts/print_reads.sh {input.bam} {input.intervals} {output.bam}'
