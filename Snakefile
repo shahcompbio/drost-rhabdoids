@@ -9,6 +9,7 @@ rule all:
     input:
         expand(os.path.join(base_dir, 'data/alignment/extracted/{sample}.svs.bam'), sample=samples),
         expand(os.path.join(base_dir, 'data/alignment/extracted/{sample}.svs.bam.bai'), sample=samples),
+        expand(os.path.join(base_dir, 'data/alignment/extracted/{sample}.svs.fastq.gz'), sample=samples),
 
 rule extract_reads:
     input:
@@ -33,3 +34,15 @@ rule samtools_index:
         bai = os.path.join(base_dir, 'data/alignment/extracted/{sample}.svs.bam.bai'),
     shell:
         'samtools index {input.bam}'
+
+rule bedtofastq:
+    input:
+        bam = os.path.join(base_dir, 'data/alignment/extracted/{sample}.svs.bam'),
+    output:
+        fastq = os.path.join(base_dir, 'data/alignment/extracted/{sample}.svs.fastq.gz'),
+    params:
+        fastq = os.path.join(base_dir, 'data/alignment/extracted/{sample}.svs.fastq'),
+    shell:
+        'bedtools bamtofastq -i {input.bam} -fq {params.fastq} && '
+        'gzip {params.fastq}'
+
