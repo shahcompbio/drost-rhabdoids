@@ -11,6 +11,7 @@ rule all:
         expand(os.path.join(base_dir, 'data/alignment/extracted/{sample}.svs.bam'), sample=samples),
         expand(os.path.join(base_dir, 'data/alignment/extracted/{sample}.svs.bam.bai'), sample=samples),
         expand(os.path.join(base_dir, 'data/alignment/extracted/{sample}.svs.fastq.gz'), sample=samples),
+        expand(os.path.join(base_dir, 'data/alignment/bam/default/{sample}.svs.bam'), sample=samples),
 
 rule extract_reads:
     input:
@@ -69,6 +70,41 @@ rule create_joint_reference:
         "cat {input.human_fa} {input.mouse_fa} > {output.fa} && "
         "samtools faidx {output.fa}"
 
+rule minimap_index:
+    input:
+        fa = os.path.join(base_dir, 'metadata/reference/GRCh38_mm10m.fa'),
+    output:
+        mmi = os.path.join(base_dir, 'metadata/reference/GRCh38_mm10m.fa.mmi'),
+    singularity:
+        "/juno/work/shah/users/chois7/singularity/sif/minimap2__v2.15dfsg-1-deb_cv1.sif",
+        #"docker://biocontainers/minimap2:v2.15dfsg-1-deb_cv1",
+    threads: 10,
+    shell:
+        'minimap2 -ax map-ont -t {threads} -d {output.mmi} {input.fa}'
+
+rule minimap_align:
+    input:
+        fastq = os.path.join(base_dir, 'data/alignment/extracted/{sample}.svs.fastq.gz'),
+        mmi = os.path.join(base_dir, 'metadata/reference/GRCh38_mm10m.fa.mmi'),
+    output:
+        sam = os.path.join(base_dir, 'data/alignment/bam/default/{sample}.svs.sam'),
+    singularity:
+        "/juno/work/shah/users/chois7/singularity/sif/minimap2__v2.15dfsg-1-deb_cv1.sif",
+        #"docker://biocontainers/minimap2:v2.15dfsg-1-deb_cv1",
+    threads: 20,
+    shell:
+        'minimap2 -ax map-ont -t {threads} -I8g ' # increase index chunk to 8Gbp
+        '{input.mmi} {input.fastq} > {output.sam}'
+
+rule sam_to_bam:
+    input:
+        sam = os.path.join(base_dir, 'data/alignment/bam/default/{sample}.svs.sam'),
+    output:
+        bam = os.path.join(base_dir, 'data/alignment/bam/default/{sample}.svs.bam'),
+    threads: 6,
+    shell:
+        'samtools view -b -h -O BAM -@ {threads} -o {output.bam} {input.sam}'
+    
 #rule nextflow_minimap:
 #    input:
 #        fastq = os.path.join(base_dir, 'data/alignment/extracted/{sample}.svs.fastq.gz'),
