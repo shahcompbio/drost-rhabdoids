@@ -80,7 +80,7 @@ rule minimap_index:
         #"docker://biocontainers/minimap2:v2.15dfsg-1-deb_cv1",
     threads: 10,
     shell:
-        'minimap2 -ax map-ont -t {threads} -d {output.mmi} {input.fa}'
+        'minimap2 -ax map-ont -t {threads} -I8g -d {output.mmi} {input.fa}'
 
 rule minimap_align:
     input:
