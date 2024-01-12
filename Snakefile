@@ -4,6 +4,12 @@ samples = ['PMC-01-PDOX1', 'PMC-01-PDOX2']
 
 base_dir = config['base_dir']
 tmp_dir = config['tmp_dir']
+genome_version = config['genome_version']
+genome_fas = config['genome_fa']
+genome_mmis = config['genome_mmi']
+genome_fa = genome_fas[genome_version]
+genome_mmi = genome_mmis[genome_version]
+result_version = config['result_version']
 
 rule all:
     input:
@@ -11,7 +17,8 @@ rule all:
         expand(os.path.join(base_dir, 'data/alignment/extracted/{sample}.svs.bam'), sample=samples),
         expand(os.path.join(base_dir, 'data/alignment/extracted/{sample}.svs.bam.bai'), sample=samples),
         expand(os.path.join(base_dir, 'data/alignment/extracted/{sample}.svs.fastq.gz'), sample=samples),
-        expand(os.path.join(base_dir, 'data/alignment/bam/default/{sample}.svs.bam'), sample=samples),
+        expand(os.path.join(base_dir, f'data/alignment/bam/{result_version}/{{sample}}.svs.bam'), sample=samples),
+        expand(os.path.join(base_dir, f'data/alignment/bam/{result_version}/{{sample}}.svs.sorted.bam.bai'), sample=samples),
 
 rule extract_reads:
     input:
@@ -72,9 +79,9 @@ rule create_joint_reference:
 
 rule minimap_index:
     input:
-        fa = os.path.join(base_dir, 'metadata/reference/GRCh38_mm10m.fa'),
+        fa = genome_fa,
     output:
-        mmi = os.path.join(base_dir, 'metadata/reference/GRCh38_mm10m.fa.mmi'),
+        mmi = genome_mmi,
     singularity:
         "/juno/work/shah/users/chois7/singularity/sif/minimap2__v2.15dfsg-1-deb_cv1.sif",
         #"docker://biocontainers/minimap2:v2.15dfsg-1-deb_cv1",
@@ -85,9 +92,9 @@ rule minimap_index:
 rule minimap_align:
     input:
         fastq = os.path.join(base_dir, 'data/alignment/extracted/{sample}.svs.fastq.gz'),
-        mmi = os.path.join(base_dir, 'metadata/reference/GRCh38_mm10m.fa.mmi'),
+        mmi = genome_mmi,
     output:
-        sam = os.path.join(base_dir, 'data/alignment/bam/default/{sample}.svs.sam'),
+        sam = os.path.join(base_dir, f'data/alignment/bam/{result_version}/{{sample}}.svs.sam'),
     singularity:
         "/juno/work/shah/users/chois7/singularity/sif/minimap2__v2.15dfsg-1-deb_cv1.sif",
         #"docker://biocontainers/minimap2:v2.15dfsg-1-deb_cv1",
@@ -98,12 +105,26 @@ rule minimap_align:
 
 rule sam_to_bam:
     input:
-        sam = os.path.join(base_dir, 'data/alignment/bam/default/{sample}.svs.sam'),
+        sam = os.path.join(base_dir, f'data/alignment/bam/{result_version}/{{sample}}.svs.sam'),
     output:
-        bam = os.path.join(base_dir, 'data/alignment/bam/default/{sample}.svs.bam'),
+        bam = os.path.join(base_dir, f'data/alignment/bam/{result_version}/{{sample}}.svs.bam'),
     threads: 6,
     shell:
         'samtools view -b -h -O BAM -@ {threads} -o {output.bam} {input.sam}'
+
+rule samtools_sort:
+    input:
+        bam = os.path.join(base_dir, f'data/alignment/bam/{result_version}/{{sample}}.svs.bam'),
+    output:
+        bam = os.path.join(base_dir, f'data/alignment/bam/{result_version}/{{sample}}.svs.sorted.bam'),
+        bai = os.path.join(base_dir, f'data/alignment/bam/{result_version}/{{sample}}.svs.sorted.bam.bai'),
+    params:
+        prefix = os.path.join(base_dir, f'data/alignment/bam/{result_version}/{{sample}}.svs'),
+    threads: 6,
+    shell:
+        'samtools sort -@ {threads} -o {output.bam} -T {params.prefix} {input.bam} && '
+        'samtools index {output.bam}'
+
     
 #rule nextflow_minimap:
 #    input:
