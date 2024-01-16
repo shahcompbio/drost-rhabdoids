@@ -1,6 +1,6 @@
-base_dir: /juno/work/shah/users/chois7/projects/drostlab/rhabdoids
-log_dir: /juno/work/shah/users/chois7/projects/drostlab/rhabdoids/logs
-tmp_dir: /juno/work/shah/users/chois7/projects/drostlab/rhabdoids/tmp
+base_dir: /juno/work/shah/users/chois7/projects/drostlab/rhabdoids-sv
+log_dir: /juno/work/shah/users/chois7/projects/drostlab/rhabdoids-sv/logs
+tmp_dir: /juno/work/shah/users/chois7/projects/drostlab/rhabdoids-sv/tmp
 
 result_version: GRCh38_default
 genome_version: GRCh38

@@ -10,15 +10,15 @@ genome_mmis = config['genome_mmi']
 genome_fa = genome_fas[genome_version]
 genome_mmi = genome_mmis[genome_version]
 result_version = config['result_version']
+minimap_I_option = ''
+if genome_version == 'GRCh38_mm10m':
+    minimap_I_option = '-I8g'
+
 
 rule all:
     input:
-        os.path.join(base_dir, 'metadata/reference/GRCh38_mm10m.fa.fai'),
-        expand(os.path.join(base_dir, 'data/alignment/extracted/{sample}.svs.bam'), sample=samples),
-        expand(os.path.join(base_dir, 'data/alignment/extracted/{sample}.svs.bam.bai'), sample=samples),
-        expand(os.path.join(base_dir, 'data/alignment/extracted/{sample}.svs.fastq.gz'), sample=samples),
-        expand(os.path.join(base_dir, f'data/alignment/bam/{result_version}/{{sample}}.svs.bam'), sample=samples),
-        expand(os.path.join(base_dir, f'data/alignment/bam/{result_version}/{{sample}}.svs.sorted.bam.bai'), sample=samples),
+        expand(os.path.join(base_dir, f'data/alignment/bam/{result_version}/{{sample}}.bam'), sample=samples),
+        expand(os.path.join(base_dir, f'data/alignment/bam/{result_version}/{{sample}}.sorted.bam.bai'), sample=samples),
 
 rule extract_reads:
     input:
@@ -86,38 +86,40 @@ rule minimap_index:
         "/juno/work/shah/users/chois7/singularity/sif/minimap2__v2.15dfsg-1-deb_cv1.sif",
         #"docker://biocontainers/minimap2:v2.15dfsg-1-deb_cv1",
     threads: 10,
+    params: I_option = minimap_I_option,
     shell:
-        'minimap2 -ax map-ont -t {threads} -I8g -d {output.mmi} {input.fa}'
+        'minimap2 -ax map-ont -t {threads} {params.I_option} -d {output.mmi} {input.fa}'
 
 rule minimap_align:
     input:
-        fastq = os.path.join(base_dir, 'data/alignment/extracted/{sample}.svs.fastq.gz'),
+        fastq = os.path.join(base_dir, 'data/alignment/fastq/{sample}_R1_001.fastq.gz'),
         mmi = genome_mmi,
     output:
-        sam = os.path.join(base_dir, f'data/alignment/bam/{result_version}/{{sample}}.svs.sam'),
+        sam = os.path.join(base_dir, f'data/alignment/bam/{result_version}/{{sample}}.sam'),
     singularity:
         "/juno/work/shah/users/chois7/singularity/sif/minimap2__v2.15dfsg-1-deb_cv1.sif",
         #"docker://biocontainers/minimap2:v2.15dfsg-1-deb_cv1",
     threads: 20,
+    params: I_option = minimap_I_option,
     shell:
-        'minimap2 -ax map-ont -t {threads} -I8g ' # increase index chunk to 8Gbp
+        'minimap2 -ax map-ont -t {threads} {params.I_option} ' # increase index chunk to 8Gbp
         '{input.mmi} {input.fastq} > {output.sam}'
 
 rule sam_to_bam:
     input:
-        sam = os.path.join(base_dir, f'data/alignment/bam/{result_version}/{{sample}}.svs.sam'),
+        sam = os.path.join(base_dir, f'data/alignment/bam/{result_version}/{{sample}}.sam'),
     output:
-        bam = os.path.join(base_dir, f'data/alignment/bam/{result_version}/{{sample}}.svs.bam'),
+        bam = os.path.join(base_dir, f'data/alignment/bam/{result_version}/{{sample}}.bam'),
     threads: 6,
     shell:
         'samtools view -b -h -O BAM -@ {threads} -o {output.bam} {input.sam}'
 
 rule samtools_sort:
     input:
-        bam = os.path.join(base_dir, f'data/alignment/bam/{result_version}/{{sample}}.svs.bam'),
+        bam = os.path.join(base_dir, f'data/alignment/bam/{result_version}/{{sample}}.bam'),
     output:
-        bam = os.path.join(base_dir, f'data/alignment/bam/{result_version}/{{sample}}.svs.sorted.bam'),
-        bai = os.path.join(base_dir, f'data/alignment/bam/{result_version}/{{sample}}.svs.sorted.bam.bai'),
+        bam = os.path.join(base_dir, f'data/alignment/bam/{result_version}/{{sample}}.sorted.bam'),
+        bai = os.path.join(base_dir, f'data/alignment/bam/{result_version}/{{sample}}.sorted.bam.bai'),
     params:
         prefix = os.path.join(base_dir, f'data/alignment/bam/{result_version}/{{sample}}.svs'),
     threads: 6,
@@ -125,9 +127,3 @@ rule samtools_sort:
         'samtools sort -@ {threads} -o {output.bam} -T {params.prefix} {input.bam} && '
         'samtools index {output.bam}'
 
-    
-#rule nextflow_minimap:
-#    input:
-#        fastq = os.path.join(base_dir, 'data/alignment/extracted/{sample}.svs.fastq.gz'),
-#    output:
-#        bam = 
