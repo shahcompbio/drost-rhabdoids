@@ -13,6 +13,7 @@ cmd="$cmd --cluster-cancel bkill"
 cmd="$cmd --use-singularity"
 cmd="$cmd -p"
 cmd="$cmd --singularity-args \"--bind /juno --bind /rtsess01\""
+cmd="$cmd --allowed-rules make_vcf_list run_survivor conform_savana_svs"
 # cmd="$cmd --dry-run"
 
 echo $cmd

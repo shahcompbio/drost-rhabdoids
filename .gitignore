@@ -1,6 +1,6 @@
 data/
 *.ipynb
-logs/
+logs*/
 .snakemake
-tmp/
+tmp*/
 reference/

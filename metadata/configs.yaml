@@ -1,9 +1,9 @@
 base_dir: /juno/work/shah/users/chois7/projects/drostlab/rhabdoids-sv
-log_dir: /juno/work/shah/users/chois7/projects/drostlab/rhabdoids-sv/logs
-tmp_dir: /juno/work/shah/users/chois7/projects/drostlab/rhabdoids-sv/tmp
 
-result_version: GRCh38_default
-genome_version: GRCh38
+result_version: GRCh38_mm10m_default
+genome_version: GRCh38_mm10m
+log_dir: logs_GRCh38_mm10m
+tmp_dir: tmp_GRCh38_mm10m
 genome_fa:
     GRCh38_mm10m: /juno/work/shah/users/chois7/projects/drostlab/rhabdoids/metadata/reference/GRCh38_mm10m.fa
     GRCh38: /juno/work/shah/users/chois7/projects/drostlab/rhabdoids/metadata/reference/GRCh38_full_analysis_set_plus_decoy_hla.fa
@@ -13,3 +13,9 @@ genome_mmi:
     GRCh38: /juno/work/shah/users/chois7/projects/drostlab/rhabdoids/metadata/reference/GRCh38_full_analysis_set_plus_decoy_hla.fa.mmi
     mm10: /juno/work/shah/users/chois7/projects/drostlab/rhabdoids/metadata/reference/mm10_build38_mouse.fasta.mmi
 
+normal_bam: /juno/work/shah/isabl_data_lake/analyses/84/23/38423/results/minimap2/SHAH_H003452_T01_01_WG01_R1.sorted.bam
+contigs_file: metadata/contigs.chr.hg38.txt
+genome_gtf_gz: /juno/work/shah/users/chois7/tickets/sarcoma89/refactor/pipeline/resources/tabix_gtf/results/genes.gtf.gz
+
+image:
+    survivor: /juno/work/shah/users/chois7/singularity/sif/survivor.sif
